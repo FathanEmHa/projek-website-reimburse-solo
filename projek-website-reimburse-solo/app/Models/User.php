@@ -1,61 +1,39 @@
 <?php
-
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    // Kolom yang bisa diisi mass assignment
+    protected $fillable = ['name', 'email', 'password', 'role', 'department_id'];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    // Relasi ke tabel reimburse_requests
+    public function requests()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(ReimburseRequest::class, 'user_id');
+    }  
+
+    /**
+     * Implementasi JWTSubject
+     */
+    public function getJWTIdentifier()
+    {
+        return $this->getKey(); // biasanya pakai primary key (id)
     }
 
-    /**
-     * Get the user's initials
-     */
-    public function initials(): string
+    public function getJWTCustomClaims()
     {
-        return Str::of($this->name)
-            ->explode(' ')
-            ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
-            ->implode('');
+        return []; // bisa ditambahkan custom claims kalau perlu
     }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
 }

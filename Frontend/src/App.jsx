@@ -1,35 +1,57 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
+import Login from "@/features/auth/pages/Login";
+import Unauthorized from "@/features/dashboard/pages/Unauthorized";
+import ProtectedRoute from "@/routes/ProtectedRoute";
 
-function App() {
-  const [count, setCount] = useState(0)
+import EmployeeDashboard from "@/features/dashboard/pages/EmployeeDashboard";
+import ManagerDashboard from "@/features/dashboard/pages/ManagerDashboard";
+import FinanceDashboard from "@/features/dashboard/pages/FinanceDashboard";
+import AdminDashboard from "@/features/dashboard/pages/AdminDashboard";
 
+export default function App() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+
+        <Route 
+          path="/dashboard/employee"
+          element={
+            <ProtectedRoute roles={["employee"]}>
+              <EmployeeDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route 
+          path="/dashboard/manager"
+          element={
+            <ProtectedRoute roles={["manager"]}>
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route 
+          path="/dashboard/finance"
+          element={
+            <ProtectedRoute roles={["finance"]}>
+              <FinanceDashboard />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route 
+          path="/dashboard/admin"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/unauthorized" element={<Unauthorized />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App

@@ -13,13 +13,31 @@ class ApprovalController extends Controller
 {
     public function submittedRequests()
     {
-        $pendingRequests = ReimburseRequest::where('status', 'submitted')
+        $pendingRequests = ReimburseRequest::where('status', '!=', 'draft')
             ->with('user')
             ->get();
 
         return response()->json([
             'data' => $pendingRequests,
         ]);
+    }
+
+    public function showRequest($id)
+    {
+        $request = ReimburseRequest::where('id', $id)
+        ->with('user', 'items')
+        ->find($id);
+
+        if (!$request) {
+            return response()->json([
+                'message' => 'Request Not Found'
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => $request,
+        ]);
+
     }
 
     /**
@@ -30,7 +48,7 @@ class ApprovalController extends Controller
     public function approveItem(Request $request, $itemId)
     {
         $request->validate([
-            'action' => 'required|in:approved_item,rejected_item,paid_item',
+            'action' => 'required|in:approved_item,rejected_item',
             'remarks' => 'nullable|string',
         ]);
 
@@ -50,7 +68,6 @@ class ApprovalController extends Controller
             $newItemStatus = match ($request->action) {
                 'approved_item' => 'approved',
                 'rejected_item' => 'rejected',
-                'paid_item'     => 'paid',
                 default         => $item->status,
             };
 
@@ -97,10 +114,10 @@ class ApprovalController extends Controller
      * Action at request level: manager/finance approves the whole request (one action).
      * This will set request->status and create one reimburse_approved entry.
      */
-    public function approveRequest(Request $request, $requestId)
+    public function approveAllItems(Request $request, $requestId)
     {
         $request->validate([
-            'action'  => 'required|in:approved_manager,rejected_manager,approved_finance,paid,closed',
+            'action'  => 'required|in:approved_manager,rejected_manager',
             'remarks' => 'nullable|string',
         ]);
 
@@ -112,7 +129,7 @@ class ApprovalController extends Controller
             // Update request status
             $req->update(['status' => $newStatus]);
 
-            // Create one request-level log
+            // Buat log request-level
             ReimburseApproved::create([
                 'reimburse_request_id' => $req->id,
                 'approved_by'          => auth('api')->id(),
@@ -121,14 +138,32 @@ class ApprovalController extends Controller
                 'approved_at'          => now(),
             ]);
 
-            // Optional: if approving at request level implies updating all items, do it here
-            if ($newStatus === 'paid') {
-                $req->items()->update(['status' => 'paid']);
+            // Mapping status request -> status item
+            $itemStatus = match ($newStatus) {
+                'approved_manager' => 'approved',
+                'rejected_manager' => 'rejected',
+                default            => null,
+            };
+
+            if ($itemStatus) {
+                foreach ($req->items as $item) {
+                    // 1) buat item log
+                    ReimburseItemLog::create([
+                        'reimburse_item_id'   => $item->id,
+                        'reimburse_request_id'=> $req->id,
+                        'acted_by'            => auth('api')->id(),
+                        'action'              => $itemStatus === 'approved' ? 'approved_item' : 'rejected_item',
+                        'remarks'             => $request->remarks,
+                    ]);
+
+                    // 2) update status item
+                    $item->update(['status' => $itemStatus]);
+                }
             }
         });
 
         return response()->json([
-            'message' => 'Request status updated and logged',
+            'message' => 'Request + semua item berhasil diupdate',
             'data'    => $req->fresh()->load('approvedLogs', 'items'),
         ]);
     }

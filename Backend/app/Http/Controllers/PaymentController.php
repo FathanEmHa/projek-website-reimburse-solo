@@ -6,21 +6,38 @@ use Illuminate\Http\Request;
 use App\Models\ReimburseItem;
 use App\Models\ReimburseRequest;
 use App\Models\ReimbursePayment;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
     // 1. Lihat semua item yang bisa dibayar
-    public function pending()
+    public function pendingRequests()
     {
-        $items = ReimburseItem::where('status', 'approved') // hanya item approved manager
-                    ->where('finance_status', 'pending') // belum dibayar
-                    ->with('request') // optional, biar tahu request-nya
+        $requests = ReimburseRequest::where('status', '!=', 'draft' || "canceled") // hanya item approved manager
+                    ->with('user')
                     ->get();
 
         return response()->json([
-            'message' => 'Pending reimburse items for finance',
-            'data' => $items
+            'message' => 'Pending reimburse request for finance',
+            'data' => $requests
+        ]);
+    }
+
+    public function showRequest($id)
+    {
+        $req = ReimburseRequest::where('id', $id)
+        ->with('user', 'items')
+        ->find($id);
+
+        if (!$req) {
+            return response()->json([
+                'message' => 'Request Not Found'
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => $req,
         ]);
     }
 

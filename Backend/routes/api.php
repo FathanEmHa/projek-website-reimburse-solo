@@ -23,17 +23,16 @@ Route::middleware(['auth:api', 'role:manager'])->group(function () {
     Route::get('/manager/reimburse/requests', [ApprovalController::class, 'submittedRequests']);  // Menggunakan metode query parameter
     Route::get('/manager/reimburse/requests/{id}', [ApprovalController::class, 'showRequest']);
     Route::post('/manager/reimburse/items/{id}/approve', [ApprovalController::class, 'approveItem']);
-    Route::post('/manager/reimburse/items/{id}/reject', [ApprovalController::class, 'rejectItem']);
     Route::post('/manager/reimburse/requests/{id}/approve-all', [ApprovalController::class, 'approveAllItems']);
-    Route::post('/manager/reimburse/requests/{id}/reject-all', [ApprovalController::class, 'rejectAllItems']);
     Route::get('/manager/reimburse/request/{id}/logs', [ApprovalController::class, 'requestLogs']);  // Menggunakan metode query parameter
 });
 
 Route::middleware(['auth:api', 'role:finance'])->group(function () {
-    Route::get('/finance/reimburse/pending', [PaymentController::class, 'pending']);
+    Route::get('/finance/reimburse/pendingRequests', [PaymentController::class, 'pendingRequests']);
+    Route::get('/finance/reimburse/showRequest/{id}', [PaymentController::class, 'showRequest']);
     Route::post('/finance/reimburse/item/{id}/pay', [PaymentController::class, 'payItem']);
     Route::post('/finance/reimburse/payall', [PaymentController::class, 'payAll']);
-});     
+});
 
 Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::get('/admin/users', [UserController::class, 'index']);

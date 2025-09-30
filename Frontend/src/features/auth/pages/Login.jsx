@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loginUser } from '@/utils/auth'
 import Input from '@/components/ui/Input'
-import Button from '@/components/ui/Button'
+import { Button } from '@/components/ui/Button'
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -12,40 +12,37 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     try {
-      const res = await fetch('http://localhost:8000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
+      const data = await loginUser({ email, password });
 
-      if (!res.ok) {
-        setError(data.message || "Login gagal");
+      if (!data || !data.access_token) {
+        setError("Login gagal, periksa kredensial Anda.");
         return;
       }
 
-      const data = await res.json()
-      loginUser(data);
+      
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // redirect sesuai role
       switch (data.user.role) {
         case "employee":
-        navigate("dashboard/employee");
-        break;
+          navigate("/dashboard/employee");
+          break;
         case "manager":
-        navigate("dashboard/manager");
-        break;
+          navigate("/dashboard/manager");
+          break;
         case "finance":
-        navigate("dashboard/finance");
-        break;
+          navigate("/dashboard/finance");
+          break;
         case "admin":
-        navigate("dashboard/admin");
-        break;
+          navigate("/dashboard/admin");
+          break;
         default:
-        navigate("aunaothorized");
+          navigate("/unauthorized");
       }
-
     } catch (err) {
-      alert(err.message);
+      setError("Terjadi error, coba lagi.");
     }
   };
 
@@ -78,7 +75,14 @@ export default function Login() {
             </p>
           )}
 
-          <Button type="submit">Masuk</Button>
+          <Button 
+            type="submit"
+            variant="destructive"
+            className="w-full text-white"
+          >
+            Masuk
+          </Button>
+
         </form>
 
         <p className="text-sm text-gray-500 text-center mt-6">

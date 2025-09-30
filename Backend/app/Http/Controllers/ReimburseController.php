@@ -20,7 +20,7 @@ class ReimburseController extends Controller
             'items.*.amount' => 'required|numeric|min:0',
             'items.*.payment_method' => 'required|in:cash,transfer,e-wallet',
             'items.*.location' => 'nullable|string|max:255',
-            'items.*.receipt_path' => 'nullable|string',
+            'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
 
@@ -33,7 +33,13 @@ class ReimburseController extends Controller
             'notes' => $request->notes,
         ]);
 
-        foreach ($request->items as $item) {
+        foreach ($request->items as $index => $item) {
+            $path = null;
+
+            if ($request->hasFile("items.$index.receipt")) {
+                $path = $request->file("items.$index.receipt")->store("receipts", "public");
+            }
+
             $req->items()->create([
                 'request_id' => $req->id,
                 'category_id' => $item['category_id'],
@@ -43,7 +49,7 @@ class ReimburseController extends Controller
                 'currency' => 'IDR',
                 'payment_method' => $item['payment_method'],
                 'location' => $item['location'] ?? null,
-                'receipt_path' => $item['receipt_path'] ?? null,
+                'receipt_path' => $path,
                 'status' => 'pending',
                 'invoice_number' => null, // Akan di-generate otomatis di model
             ]);
@@ -59,6 +65,7 @@ class ReimburseController extends Controller
     public function myRequests()
     {
         $requests = ReimburseRequest::where('user_id', Auth::id())
+            ->with('user')
             ->where('status', '!=', 'draft')
             ->orderByDesc('created_at')
             ->get();
@@ -75,7 +82,7 @@ class ReimburseController extends Controller
         $req = ReimburseRequest::where('id', $id)
             ->where('user_id', Auth::id())
             ->where('status', '!=', 'draft')
-            ->with('items')
+            ->with('user', 'items')
             ->firstOrFail();
 
         return response()->json([
@@ -137,7 +144,7 @@ class ReimburseController extends Controller
     {
         $req = ReimburseRequest::where('id', $id)
             ->where('user_id', Auth::id())
-            ->where('status', 'submitted')
+            ->where('status', "!=", 'closed')
             ->firstOrFail();
 
         $req->update([
@@ -145,7 +152,7 @@ class ReimburseController extends Controller
         ]);
 
         ReimburseItem::where('request_id', $req->id)
-            ->where('status', 'pending')
+            ->where('status', "!=", 'paid')
             ->update([
                 'status' => 'canceled',
             ]);

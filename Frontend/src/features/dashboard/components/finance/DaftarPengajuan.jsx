@@ -13,16 +13,16 @@ import { Eye } from "lucide-react";
 import { getToken } from "@/utils/auth";
 import { Link } from "react-router-dom";
 
-export default function DaftarPengajuanManager() {
+export default function DaftarPengajuanFinance() {
   const [pengajuan, setPengajuan] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Ambil data dari API
+  // Ambil data dari API (khusus Finance)
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/manager/reimburse/requests", {
+        const res = await fetch("http://localhost:8000/api/finance/reimburse/pendingRequests", {
           headers: {
             Authorization: `Bearer ${getToken()}`,
           },
@@ -40,18 +40,18 @@ export default function DaftarPengajuanManager() {
   // Map status ke badge warna
   const renderStatus = (status) => {
     switch (status) {
-      case "submitted":
-        return <Badge variant="warning">Submitted</Badge>;
       case "approved_manager":
         return <Badge variant="success">Approved_Manager</Badge>;
       case "rejected_manager":
         return <Badge variant="destructive">Rejected_Manager</Badge>;
       case "partially_approved":
         return <Badge variant="secondary">Partially_Approved</Badge>;
-      case "canceled":
-        return <Badge variant="destructive">Canceled</Badge>
+      case "approved_finance":
+        return <Badge variant="success">Approved_Finance</Badge>;
+      case "rejected_finance":
+        return <Badge variant="destructive">Rejected_Finance</Badge>;
       case "closed":
-        return <Badge variant="default">Closed</Badge>
+        return <Badge variant="default">Closed</Badge>;
       default:
         return <Badge variant="default">Unknown</Badge>;
     }
@@ -64,7 +64,7 @@ export default function DaftarPengajuanManager() {
 
   return (
     <div className="p-6 text-black">
-      <h1 className="text-xl font-semibold mb-4 text-black">Daftar Pengajuan</h1>
+      <h1 className="text-xl font-semibold mb-4 text-black">Daftar Pengajuan (Finance)</h1>
 
       <Table>
         <TableHeader>
@@ -82,12 +82,12 @@ export default function DaftarPengajuanManager() {
             currentData.map((item, index) => (
               <TableRow key={item.id}>
                 <TableCell>{startIndex + index + 1}</TableCell>
-                <TableCell>{item.user.name}</TableCell>
-                <TableCell>Rp {item.total_amount.toLocaleString()}</TableCell>
+                <TableCell>{item.user?.name}</TableCell>
+                <TableCell>Rp {item.total_amount.toLocaleString("id-ID")}</TableCell>
                 <TableCell>{item.date_submitted}</TableCell>
                 <TableCell>{renderStatus(item.status)}</TableCell>
                 <TableCell className="flex gap-2">
-                  <Link to={`/dashboard/manager/request/${item.id}`}>
+                  <Link to={`/dashboard/finance/request/${item.id}`}>
                     <Button size="sm" variant="outline">
                       <Eye className="w-4 h-4" />
                     </Button>

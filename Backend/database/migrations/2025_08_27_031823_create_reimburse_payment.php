@@ -10,10 +10,11 @@ return new class extends Migration
     {
         Schema::create('reimburse_payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reimburse_item_id')->constrained('reimburse_items')->onDelete('cascade');
+            $table->foreignId('reimburse_request_id')->constrained('reimburse_requests')->onDelete('cascade');
             $table->decimal('amount', 15, 2);
             $table->enum('payment_method', ['cash', 'transfer', 'e-wallet']);
             $table->string('transaction_ref')->nullable();
+            $table->string('remarks')->nullable();
             $table->foreignId('paid_by')->constrained('users');
             $table->timestamp('paid_at')->useCurrent();
             $table->timestamps();

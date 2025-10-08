@@ -6,6 +6,7 @@ export default function Sidebar() {
     { name: "Home", icon: <Home size={20} />, path: "/dashboard/employee/home" },
     { name: "Form Pengajuan", icon: <FileText size={20} />, path: "/dashboard/employee/form" },
     { name: "Pengajuan Saya", icon: <ClipboardList size={20} />,  path:"/dashboard/employee/myRequest" },
+    { name: "Draft Saya", icon: <Receipt size={20} />, path: "/dashboard/employee/myDrafts" },
   ];
 
   return (

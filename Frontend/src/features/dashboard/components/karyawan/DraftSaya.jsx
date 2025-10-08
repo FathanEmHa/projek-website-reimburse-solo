@@ -13,15 +13,15 @@ import {
 } from "@/components/ui/Table";
 import { Eye, Pencil, XCircle, Trash } from "lucide-react";
 
-export default function RequestSaya() {
+export default function DraftSaya() {
   const [requests, setRequests] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   // fetch semua request
-  const fetchRequests = async () => {
+  const fetchDraft = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/reimburse/request", {
+      const res = await fetch("http://localhost:8000/api/reimburse/drafts", {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
@@ -34,7 +34,7 @@ export default function RequestSaya() {
   };
 
   useEffect(() => {
-    fetchRequests();
+    fetchDraft();
   }, []);
 
   // map status → badge
@@ -42,6 +42,8 @@ export default function RequestSaya() {
     switch (status) {
       case "submitted":
         return <Badge variant="warning">Submitted</Badge>;
+      case "draft":
+        return <Badge variant="secondary">Draft</Badge>;
       case "approved_manager":
         return <Badge variant="success">Approved_Manager</Badge>;
       case "rejected_manager":
@@ -61,7 +63,7 @@ export default function RequestSaya() {
   const handleDelete = async (id) => {
     if (!confirm("Yakin mau hapus request ini?")) return;
     try {
-      await fetch(`http://localhost:8000/api/reimburse/request/${id}`, {
+      await fetch(`http://localhost:8000/api/reimburse/draft/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${getToken()}`,
@@ -74,23 +76,23 @@ export default function RequestSaya() {
   };
 
   // cancel request
-  const handleCancel = async (id) => {
-    if (!confirm("Yakin mau cancel request ini?")) return;
-    try {
-      await fetch(
-        `http://localhost:8000/api/reimburse/request/${id}/cancel`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
-        }
-      );
-      fetchRequests();
-    } catch (err) {
-      console.error("Gagal cancel:", err);
-    }
-  };
+//   const handleCancel = async (id) => {
+//     if (!confirm("Yakin mau cancel request ini?")) return;
+//     try {
+//       await fetch(
+//         `http://localhost:8000/api/reimburse/request/${id}/cancel`,
+//         {
+//           method: "PUT",
+//           headers: {
+//             Authorization: `Bearer ${getToken()}`,
+//           },
+//         }
+//       );
+//       fetchRequests();
+//     } catch (err) {
+//       console.error("Gagal cancel:", err);
+//     }
+//   };
 
   // --- Pagination logic ---
   const totalPages = Math.ceil(requests.length / itemsPerPage);
@@ -99,7 +101,7 @@ export default function RequestSaya() {
 
   return (
     <div className="p-6 text-black">
-      <h1 className="text-xl font-bold mb-4">Request Saya</h1>
+      <h1 className="text-xl font-bold mb-4">Draft Saya</h1>
 
       <Table>
         <TableHeader>
@@ -109,7 +111,6 @@ export default function RequestSaya() {
             <TableHead>Status</TableHead>
             <TableHead>Total</TableHead>
             <TableHead>Catatan</TableHead>
-            <TableHead>Tanggal</TableHead>
             <TableHead>Aksi</TableHead>
           </TableRow>
         </TableHeader>
@@ -124,25 +125,24 @@ export default function RequestSaya() {
                   Rp {Number(req.total_amount).toLocaleString("id-ID")}
                 </TableCell>
                 <TableCell>{req.notes}</TableCell>
-                <TableCell>{req.date_submitted}</TableCell>
                 <TableCell className="flex gap-2">
                   {/* Detail */}
-                  <Link to={`/dashboard/employee/myRequest/${req.id}`}>
+                  <Link to={`/dashboard/employee/myDraft/${req.id}`}>
                     <Button size="sm" variant="outline">
                       <Eye className="w-4 h-4" />
                     </Button>
                   </Link>
 
-                  {/* Update */}
+                  {/* Update
                   {req.status !== "canceled" && (
                   <Link to={`/dashboard/employee/myRequest/${req.id}/edit`}>
                     <Button size="sm" variant="secondary">
                       <Pencil className="w-4 h-4" />
                     </Button>
                   </Link>
-                  )}
+                  )} */}
 
-                  {/* Cancel */}
+                  {/* Cancel
                   {req.status !== "canceled" && (
                   <Button
                     size="sm"
@@ -151,7 +151,7 @@ export default function RequestSaya() {
                   >
                     <XCircle className="w-4 h-4" />
                   </Button>
-                  )}
+                  )} */}
 
                   {/* Delete */}
                   {req.status === "canceled" && (

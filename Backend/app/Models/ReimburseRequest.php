@@ -48,8 +48,8 @@ class ReimburseRequest extends Model
         return $this->hasMany(\App\Models\ReimburseItemLog::class, 'reimburse_request_id');
     }
 
-    public function payment()
+    public function payments()
     {
-        return $this->hasOne(ReimbursePayment::class, 'request_id');
+        return $this->hasOne(ReimbursePayment::class, 'reimburse_request_id');
     }
 }

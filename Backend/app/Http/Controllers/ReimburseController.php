@@ -101,7 +101,7 @@ class ReimburseController extends Controller
             'items.*.amount' => 'required|numeric|min:0',
             'items.*.payment_method' => 'required|in:cash,transfer,e-wallet',
             'items.*.location' => 'nullable|string|max:255',
-            'items.*.receipt_path' => 'nullable|string',
+            'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         $req = ReimburseRequest::where('id', $id)
@@ -150,13 +150,7 @@ class ReimburseController extends Controller
         $req->update([
             'status' => 'canceled',
         ]);
-
-        ReimburseItem::where('request_id', $req->id)
-            ->where('status', "!=", 'paid')
-            ->update([
-                'status' => 'canceled',
-            ]);
-
+        
         return response()->json([
             'message' => 'request canceled'
         ]);
@@ -174,6 +168,55 @@ class ReimburseController extends Controller
         return response()->json([
             'message' => 'Request deleted'
         ]);
+    }
+
+    public function deleteItem($id)
+    {
+        try {
+            $item = ReimburseItem::with('request')->find($id);
+
+            if (!$item) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Item tidak ditemukan',
+                ], 404);
+            }
+
+            // Cek apakah user berhak
+            if ($item->request->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk item ini',
+                ], 403);
+            }
+
+            $request = $item->request;
+
+            // Cek apakah request bisa diubah
+            if (in_array($request->status, ['approved_manager', 'rejected_manager', 'closed', 'canceled'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Request sudah dikunci, item tidak bisa dihapus',
+                ], 403);
+            }
+
+            // Hapus item
+            $item->delete();
+
+            // Update total_amount di parent request
+            $total = $request->items()->sum('amount');
+            $request->update(['total_amount' => $total]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item berhasil dihapus',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     // 3. Simpan sebagai draft
@@ -228,6 +271,7 @@ class ReimburseController extends Controller
     public function myDrafts()
     {
         $drafts = ReimburseRequest::where('user_id', Auth::id())
+            ->with('user')
             ->where('status', 'draft')
             ->orderByDesc('created_at')
             ->get();
@@ -243,7 +287,7 @@ class ReimburseController extends Controller
         $drafts = ReimburseRequest::where('id', $id)
             ->where('user_id', Auth::id())
             ->where('status', 'draft')
-            ->with('items')
+            ->with('items', 'user')
             ->firstOrFail();
 
         return response()->json([

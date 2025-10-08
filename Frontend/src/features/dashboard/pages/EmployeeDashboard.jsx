@@ -11,6 +11,8 @@ export default function EmployeeDashboard() {
     { name: "Form Pengajuan", path: "/dashboard/employee/form" },
     { name: "Pengajuan Saya", path: "/dashboard/employee/myRequest" },
     { name: "Detail Request", path: "/dashboard/employee/myRequest/:id" },
+    { name: "Draft Saya", path:  "/dashboard/employee/myDrafts" },
+    { name: "Detail Draft", path: "/dashboard/employee/myDraft/:id" },
   ];
 
   // Cari judul sesuai path aktif

@@ -22,6 +22,7 @@ return new class extends Migration
                 'approved_finance',
                 'rejected_finance',
                 'canceled',
+                'closed',
             ])->default('draft');
             $table->bigInteger('total_amount');
             $table->text('notes')->nullable();

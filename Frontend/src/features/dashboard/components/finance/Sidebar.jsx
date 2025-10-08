@@ -4,6 +4,7 @@ import { NavLink } from "react-router-dom";
 export default function Sidebar() {
   const menus = [
     { name: "Home", icon: <Home size={20} />, path: "/dashboard/finance/home" },
+    { name: "Daftar Pengajuan", icon: <ClipboardList size={20} />, path: "/dashboard/finance/request" },
   ];
 
   return (

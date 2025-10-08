@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('invoice_number')->unique();
             $table->string('receipt_path')->nullable();
             $table->enum('status', ['draft', 'pending', 'approved', 'rejected', 'canceled'])->default('pending');
-            $table->enum('finance_status', ['pending', 'approved_finance', 'paid'])->default('pending');
+            $table->enum('finance_status', ['pending', 'rejected', 'paid'])->default('pending');
             $table->timestamps();
 
             $table->foreign('request_id')->references('id')->on('reimburse_requests')->onDelete('cascade');

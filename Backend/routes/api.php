@@ -31,7 +31,7 @@ Route::middleware(['auth:api', 'role:finance'])->group(function () {
     Route::get('/finance/reimburse/pendingRequests', [PaymentController::class, 'pendingRequests']);
     Route::get('/finance/reimburse/showRequest/{id}', [PaymentController::class, 'showRequest']);
     Route::post('/finance/reimburse/item/{id}/pay', [PaymentController::class, 'payItem']);
-    Route::post('/finance/reimburse/payall', [PaymentController::class, 'payAll']);
+    Route::post('/finance/reimburse/{id}/payall', [PaymentController::class, 'payAll']);
 });
 
 Route::middleware(['auth:api', 'role:admin'])->group(function () {
@@ -49,6 +49,9 @@ Route::middleware(['auth:api', 'role:employee'])->group(function () {
     Route::put('/reimburse/draft/{id}', [ReimburseController::class, 'updateDraft']);
     Route::post('/reimburse/{id}/submit', [ReimburseController::class, 'submitDraft']);
     Route::delete('/reimburse/draft/{id}', [ReimburseController::class, 'deleteDraft']);
+
+    // delet item dari draft atau request
+    Route::delete('/reimburse/item/{id}', [ReimburseController::class, 'deleteItem']);
 
     // fitur crud request reimburse
     Route::get('/reimburse/request', [ReimburseController::class, 'myRequests']);

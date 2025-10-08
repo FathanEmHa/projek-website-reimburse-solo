@@ -8,7 +8,7 @@ class ReimbursePayment extends Model
     protected $table = 'reimburse_payments'; 
     protected $fillable = [
         'id',
-        'reimburse_item_id',
+        'reimburse_request_id',
         'amount',
         'payment_method',
         'transaction_ref',

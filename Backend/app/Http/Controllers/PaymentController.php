@@ -6,41 +6,43 @@ use Illuminate\Http\Request;
 use App\Models\ReimburseItem;
 use App\Models\ReimburseRequest;
 use App\Models\ReimbursePayment;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
-    // 1. Lihat semua item yang bisa dibayar
+    // 1. Lihat semua request yg bisa diproses finance
     public function pendingRequests()
     {
-        $requests = ReimburseRequest::where('status', '!=', 'draft' || "canceled") // hanya item approved manager
+        $requests = ReimburseRequest::whereNotIn('status', ['draft', 'canceled', 'submitted'])
                     ->with('user')
                     ->get();
 
         return response()->json([
-            'message' => 'Pending reimburse request for finance',
-            'data' => $requests
+            'success' => true,
+            'message' => 'Pending reimburse requests for finance',
+            'data'    => $requests,
         ]);
     }
 
+    // 2. Detail 1 request (beserta item & user)
     public function showRequest($id)
     {
-        $req = ReimburseRequest::where('id', $id)
-        ->with('user', 'items')
-        ->find($id);
+        $req = ReimburseRequest::with('user', 'items')->find($id);
 
         if (!$req) {
             return response()->json([
-                'message' => 'Request Not Found'
+                'success' => false,
+                'message' => 'Request not found',
             ], 404);
         }
 
         return response()->json([
-            'data' => $req,
+            'success' => true,
+            'data'    => $req,
         ]);
     }
 
+    // 3. Bayar per item
     public function payItem(Request $request, $itemId)
     {
         $request->validate([
@@ -51,18 +53,16 @@ class PaymentController extends Controller
         $item = ReimburseItem::findOrFail($itemId);
 
         if ($item->status !== 'approved') {
-            return response()->json(['message' => 'Item not approved by manager, cannot pay'], 400);
+            return response()->json(['success' => false, 'message' => 'Item not approved by manager, cannot pay'], 400);
         }
 
         if ($item->finance_status === 'paid') {
-            return response()->json(['message' => 'Item already paid'], 400);
+            return response()->json(['success' => false, 'message' => 'Item already paid'], 400);
         }
 
         DB::transaction(function () use ($item, $request) {
-            // update item
             $item->update(['finance_status' => 'paid']);
 
-            // insert payment
             ReimbursePayment::create([
                 'reimburse_item_id' => $item->id,
                 'amount'            => $item->amount,
@@ -74,41 +74,73 @@ class PaymentController extends Controller
         });
 
         return response()->json([
+            'success' => true,
             'message' => 'Item paid',
-            'data' => $item->load('payments'),
+            'data'    => $item->load('payments'),
         ]);
     }
 
-    // 3. Bayar semua item sekaligus (batch)
-    public function payAll(Request $request)
+    // 4. Bayar semua item approved sekaligus
+    public function payAll(Request $request, $requestId)
     {
         $request->validate([
-            'payment_method' => 'required|string',
-            'transaction_ref' => 'nullable|string',
+            'payment_method'   => 'required|string|in:transfer',
+            'transaction_ref'  => 'required|string',
+            'remarks'          => 'nullable|string',
         ]);
 
-        $items = ReimburseItem::where('status', 'approved')
-                    ->where('finance_status', 'pending')
-                    ->get();
+        $req = ReimburseRequest::with('items')->find($requestId);
 
-        DB::transaction(function () use ($items, $request) {
-            foreach ($items as $item) {
-                $item->update(['finance_status' => 'paid']);
+        if (!$req) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Request not found',
+            ], 404);
+        }
 
-                ReimbursePayment::create([
-                    'reimburse_item_id' => $item->id,
-                    'amount'            => $item->amount,
-                    'payment_method'    => $request->payment_method,
-                    'transaction_ref'   => $request->transaction_ref,
-                    'paid_by'           => auth('api')->id(),
-                    'payment_date'      => now(),
-                ]);
-            }
+        // Ambil semua item yang approved + masih pending finance
+        $items = $req->items()
+            ->where('status', 'approved')
+            ->where('finance_status', 'pending')
+            ->get();
+
+        if ($items->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No approved items to pay',
+            ], 400);
+        }
+
+        DB::transaction(function () use ($items, $request, $req) {
+            // Update semua item jadi paid
+            $req->items()
+                ->where('status', 'approved')
+                ->update(['finance_status' => 'paid']);
+
+            // Update item jadi rejected
+            $req->items()
+                ->where('status', 'rejected')
+                ->update(['finance_status' => 'rejected']);
+
+            // Buat 1 record pembayaran untuk keseluruhan request
+            ReimbursePayment::create([
+                'reimburse_request_id' => $req->id,
+                'amount'            => $req->total_amount, // total dari request
+                'payment_method'    => $request->payment_method,
+                'transaction_ref'   => $request->transaction_ref,
+                'remarks'           => $request->remarks,
+                'paid_by'           => auth('api')->id(),
+                'payment_date'      => now(),
+            ]);
+
+            // Setelah semua item paid → update request jadi closed
+            $req->update(['status' => 'closed']);
         });
 
         return response()->json([
-            'message' => 'All approved items have been paid',
-            'data' => $items->load('payments'),
+            'success' => true,
+            'message' => 'Request has been fully paid and closed',
+            'data'    => ReimburseRequest::with(['items', 'payments'])->find($req->id),
         ]);
     }
 }

@@ -8,16 +8,20 @@ import HomeKaryawan from "@/features/dashboard/components/karyawan/HomeKaryawan"
 import FormPengajuan from "@/features/dashboard/components/karyawan/FormPengajuan";
 import RequestSaya from "@/features/dashboard/components/karyawan/RequestSaya";
 import DetailPageKaryawan from "@/features/dashboard/components/karyawan/DetailPageKaryawan";
+import DraftSaya from "./features/dashboard/components/karyawan/DraftSaya";
+import FormEditPengajuan from "./features/dashboard/components/karyawan/FormEditPengajuan";
 
 import ManagerDashboard from "@/features/dashboard/pages/ManagerDashboard";
 import HomeManager from "@/features/dashboard/components/manager/HomeManager";
-import DaftarPengajuan from "@/features/dashboard/components/manager/DaftarPengajuan";
+import DaftarPengajuanManager from "@/features/dashboard/components/manager/DaftarPengajuan";
 import DetailPageManager from "@/features/dashboard/components/manager/DetailPageManager";
 
 import FinanceDashboard from "@/features/dashboard/pages/FinanceDashboard";
 import HomeFinance from "@/features/dashboard/components/finance/HomeFinance";
+import DaftarPengajuanFinance from "@/features/dashboard/components/finance/DaftarPengajuan";
 
 import AdminDashboard from "@/features/dashboard/pages/AdminDashboard";
+import DetailPageFinance from "./features/dashboard/components/finance/DetailPageFinance";
 
 export default function App() {
   return (
@@ -38,6 +42,9 @@ export default function App() {
           <Route path="form" element={<FormPengajuan />} />
           <Route path="myRequest" element={<RequestSaya />} />
           <Route path="myRequest/:id" element={<DetailPageKaryawan />} />
+          <Route path="myDrafts" element={<DraftSaya />} />
+          <Route path="myDraft/:id" element={<DetailPageKaryawan />} />
+          <Route path="form/:id" element={<FormEditPengajuan />} />
         </Route>
 
         <Route 
@@ -50,7 +57,7 @@ export default function App() {
         >
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<HomeManager />} />
-          <Route path="request" element={<DaftarPengajuan />} />
+          <Route path="request" element={<DaftarPengajuanManager />} />
           <Route path="request/:id" element={<DetailPageManager />} />
         </Route>
 
@@ -64,6 +71,8 @@ export default function App() {
         >
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<HomeFinance /> } />
+          <Route path="request" element={<DaftarPengajuanFinance />} />
+          <Route path="request/:id" element={<DetailPageFinance />} />
         </Route>
         
         <Route 

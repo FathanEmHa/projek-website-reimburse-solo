@@ -7,26 +7,14 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Plus, Trash } from "lucide-react";
 
-export default function FormPengajuan({ mode = "create" }) {
+export default function FormEditPengajuan() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [notes, setNotes] = useState("");
-  const [items, setItems] = useState([
-    {
-      category_id: "",
-      expense_date: "",
-      description: "",
-      amount: "",
-      payment_method: "transfer",
-      location: "",
-      receipt: null,
-    },
-  ]);
-  const [loading, setLoading] = useState(false);
-  const isEdit = mode === "edit";
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dummy kategori (bisa nanti fetch dari API)
   const categories = [
     { id: 1, label: "Transportasi" },
     { id: 2, label: "Makan & Minum" },
@@ -34,46 +22,55 @@ export default function FormPengajuan({ mode = "create" }) {
     { id: 4, label: "Lain-lain" },
   ];
 
-  // Ambil data draft saat edit
+  // Fetch draft dari API
   useEffect(() => {
-    if (isEdit && id) {
-      fetch(`http://localhost:8000/api/reimburse/draft/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.data) {
-            setNotes(data.data.notes || "");
-            setItems(
-              data.data.items?.length
-                ? data.data.items.map((i) => ({
-                    category_id: i.category_id || "",
-                    expense_date: i.expense_date || "",
-                    description: i.description || "",
-                    amount: i.amount || "",
-                    payment_method: i.payment_method || "transfer",
-                    location: i.location || "",
-                    receipt: null,
-                  }))
-                : [
-                    {
-                      category_id: "",
-                      expense_date: "",
-                      description: "",
-                      amount: "",
-                      payment_method: "transfer",
-                      location: "",
-                      receipt: null,
-                    },
-                  ]
-            );
-          }
-        })
-        .catch(() => alert("Gagal memuat draft"));
-    }
-  }, [id, isEdit]);
+    const fetchDraft = async () => {
+      try {
+        const token = getToken();
+        const res = await fetch(`http://localhost:8000/api/reimburse/draft/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
 
-  // Fungsi bantu item
+        if (res.ok && data.data) {
+          const draft = data.data;
+          setNotes(draft.notes || "");
+          setItems(
+            draft.items?.length
+              ? draft.items.map((i) => ({
+                  category_id: i.category_id || "",
+                  expense_date: i.expense_date || "",
+                  description: i.description || "",
+                  amount: i.amount || "",
+                  payment_method: i.payment_method || "transfer",
+                  location: i.location || "",
+                  receipt: null,
+                }))
+              : [
+                  {
+                    category_id: "",
+                    expense_date: "",
+                    description: "",
+                    amount: "",
+                    payment_method: "transfer",
+                    location: "",
+                    receipt: null,
+                  },
+                ]
+          );
+        } else {
+          alert("Gagal memuat draft!");
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDraft();
+  }, [id]);
+
   const addItem = () => {
     setItems([
       ...items,
@@ -99,7 +96,6 @@ export default function FormPengajuan({ mode = "create" }) {
     setItems(newItems);
   };
 
-  // Build FormData (karena ada file upload)
   const buildFormData = () => {
     const formData = new FormData();
     formData.append("notes", notes);
@@ -119,55 +115,38 @@ export default function FormPengajuan({ mode = "create" }) {
     return formData;
   };
 
-  // Submit/draft handler
-  const handleSubmit = async (type = "submit") => {
-    if (!notes.trim()) {
-      alert("Catatan tidak boleh kosong!");
-      return;
-    }
-
+  const handleSubmit = async () => {
     setLoading(true);
-    const endpoint =
-      type === "draft"
-        ? isEdit
-          ? `http://localhost:8000/api/reimburse/draft/${id}`
-          : `http://localhost:8000/api/reimburse/draft`
-        : `http://localhost:8000/api/reimburse`;
-
-    const method = type === "draft" && isEdit ? "PUT" : "POST";
-    const formData = buildFormData();
-
     try {
-      const res = await fetch(endpoint, {
-        method,
-        headers: { Authorization: `Bearer ${getToken()}` },
-        body: formData,
+      const token = getToken();
+      const res = await fetch(`http://localhost:8000/api/reimburse/draft/${id}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: buildFormData(),
       });
 
       const data = await res.json();
-
       if (res.ok) {
-        alert(type === "draft" ? "Draft berhasil disimpan 📝" : "Pengajuan berhasil dikirim 🚀");
-        navigate("/dashboard/employee/request-saya");
+        alert("Draft berhasil diperbarui ✅");
+        navigate("/dashboard/employee/drafts");
       } else {
-        console.error(data);
-        alert(data.message || "Terjadi kesalahan!");
+        alert(data.message || "Gagal memperbarui draft!");
       }
     } catch (err) {
       console.error(err);
-      alert("Gagal mengirim data");
+      alert("Terjadi kesalahan saat menyimpan perubahan.");
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading) return <p className="text-center">Memuat data...</p>;
+
   return (
     <div className="max-w-4xl mx-auto mt-10">
       <Card className="shadow-md border border-gray-200">
         <CardHeader>
-          <CardTitle>
-            {isEdit ? "Edit Draft Reimburse" : "Form Pengajuan Reimburse"}
-          </CardTitle>
+          <CardTitle>Edit Draft Reimburse</CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-6">
@@ -250,7 +229,9 @@ export default function FormPengajuan({ mode = "create" }) {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">Metode Pembayaran</label>
+                    <label className="text-sm font-medium">
+                      Metode Pembayaran
+                    </label>
                     <select
                       value={item.payment_method}
                       onChange={(e) =>
@@ -259,6 +240,7 @@ export default function FormPengajuan({ mode = "create" }) {
                       className="w-full border rounded-md p-2 bg-white text-gray-900"
                     >
                       <option value="transfer">Transfer</option>
+                      <option value="cash">Cash</option>
                     </select>
                   </div>
                 </div>
@@ -309,21 +291,14 @@ export default function FormPengajuan({ mode = "create" }) {
             </Button>
           </div>
 
-          {/* Tombol aksi */}
+          {/* Tombol Simpan */}
           <div className="flex justify-end gap-3 pt-5">
             <Button
-              variant="outline"
-              onClick={() => handleSubmit("draft")}
-              disabled={loading}
-            >
-              Simpan sebagai Draft
-            </Button>
-            <Button
               variant="success"
-              onClick={() => handleSubmit("submit")}
+              onClick={handleSubmit}
               disabled={loading}
             >
-              Kirim Pengajuan
+              {loading ? "Menyimpan..." : "Simpan Perubahan"}
             </Button>
           </div>
         </CardContent>

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\ReimburseRequest;
 use App\Models\ReimburseItem;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ReimburseController extends Controller
 {
@@ -238,9 +240,7 @@ class ReimburseController extends Controller
             'request_code' => null, // Akan di-generate otomatis di model
             'date_submitted' => null,
             'status' => 'draft',
-            'total_amount' => collect($request->items)->sum(function ($item) {
-                return (int) ($item['amount'] * 100); // Konversi ke cents jika pakai currency
-            }),
+            'total_amount' => collect($request->items)->sum('amount'),
             'notes' => $request->notes,
         ]);
 
@@ -298,52 +298,72 @@ class ReimburseController extends Controller
 
     public function updateDraft(Request $request, $id)
     {
-        $request->validate([
-            'items' => 'required|array|min:1',
-            'items.*.category_id' => 'required|exists:categories,id',
-            'items.*.expense_date' => 'required|date',
-            'items.*.description' => 'required|string|max:255',
-            'items.*.amount' => 'required|numeric|min:0',
-            'items.*.payment_method' => 'required|in:cash,transfer,e-wallet',
-            'items.*.location' => 'nullable|string|max:255',
-            'items.*.receipt_path' => 'nullable|string',
-        ]);
-
-        $req = ReimburseRequest::where('id', $id)
-            ->where('user_id', Auth::id())
-            ->where('status', 'draft')
-            ->firstOrFail();
-
-        $req->update([
-            'total_amount' => collect($request->items)->sum(function ($item) {
-                return (int) ($item['amount'] * 100); // Konversi ke cents jika pakai currency
-            }),
-            'notes' => $request->notes,
-        ]);
-
-        // Hapus item lama
-        ReimburseItem::where('request_id', $req->id)->delete();
-        // Simpan item baru
-        foreach ($request->items as $item) {
-            ReimburseItem::create([
-                'request_id' => $req->id,
-                'category_id' => $item['category_id'],
-                'expense_date' => $item['expense_date'],
-                'description' => $item['description'],
-                'amount' => $item['amount'],
-                'payment_method' => $item['payment_method'],
-                'currency' => 'IDR',
-                'status' => 'draft',
-                'location' => $item['location'] ?? null,
-                'receipt_path' => $item['receipt_path'] ?? null,
-                'invoice_number' => null,
+        try {
+            // 🔹 Validasi input
+            $validated = $request->validate([
+                'items' => 'required|array|min:1',
+                'items.*.category_id' => 'required|exists:categories,id',
+                'items.*.expense_date' => 'required|date',
+                'items.*.description' => 'required|string|max:255',
+                'items.*.amount' => 'required|numeric|min:0',
+                'items.*.payment_method' => 'required|in:cash,transfer,e-wallet',
+                'items.*.location' => 'nullable|string|max:255',
+                'items.*.receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
             ]);
+
+            // 🔹 Cek draft berdasarkan user & status
+            $req = ReimburseRequest::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->where('status', 'draft')
+                ->firstOrFail();
+
+            // 🔹 Update data utama
+            $req->update([
+                'total_amount' => collect($validated['items'])->sum(fn($item) => (int) ($item['amount'] * 100)),
+                'notes' => $request->notes,
+            ]);
+
+            // 🔹 Hapus item lama dan simpan ulang
+            ReimburseItem::where('request_id', $req->id)->delete();
+
+            foreach ($validated['items'] as $item) {
+                ReimburseItem::create([
+                    'request_id' => $req->id,
+                    'category_id' => $item['category_id'],
+                    'expense_date' => $item['expense_date'],
+                    'description' => $item['description'],
+                    'amount' => $item['amount'],
+                    'payment_method' => $item['payment_method'],
+                    'currency' => 'IDR',
+                    'status' => 'draft',
+                    'location' => $item['location'] ?? null,
+                    'receipt_path' => $item['receipt_path'] ?? null,
+                    'invoice_number' => null,
+                ]);
+            }
+
+            // 🔹 Response sukses
+            return response()->json([
+                'message' => 'Draft updated successfully',
+                'data' => $req->load('items'),
+            ], 200);
         }
 
-        return response()->json([
-            'message' => 'Draft updated',
-            'data' => $req->load('items'),
-        ]);
+        // 🔹 Tangani validasi gagal
+        catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        // 🔹 Tangani error tak terduga
+        catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan pada server',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     // 4. Submit draft → ubah ke submitted

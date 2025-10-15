@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getToken } from "@/utils/auth";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { LoadingBouncyArc } from "@/components/ui/Loading";
 import {
   Table,
   TableBody,
@@ -12,10 +13,12 @@ import {
   TableRow,
 } from "@/components/ui/Table";
 import { Eye, Pencil, XCircle, Trash } from "lucide-react";
+import { formatRupiah } from "@/utils/format";
 
 export default function DraftSaya() {
   const [requests, setRequests] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 10;
 
   // fetch semua request
@@ -28,6 +31,9 @@ export default function DraftSaya() {
       });
       const data = await res.json();
       setRequests(data.data);
+      setTimeout (() => {
+        setIsLoading(false);
+      }, 1600);
     } catch (err) {
       console.error("Gagal ambil request:", err);
     }
@@ -35,6 +41,7 @@ export default function DraftSaya() {
 
   useEffect(() => {
     fetchDraft();
+    return () => clearTimeout();
   }, []);
 
   // map status → badge
@@ -99,8 +106,12 @@ export default function DraftSaya() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = requests.slice(startIndex, startIndex + itemsPerPage);
 
+  if (isLoading) {
+    return <LoadingBouncyArc fullscreen text="Memuat draft..." />;
+  }
+
   return (
-    <div className="p-6 text-black">
+    <div className="w-full p-2 bg-gradient-to-br from-[#0A1E3A]/60 via-[#091A2E]/40 to-[#06142A]/30 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-2xl">
       <h1 className="text-xl font-bold mb-4">Draft Saya</h1>
 
       <Table>
@@ -121,9 +132,7 @@ export default function DraftSaya() {
                 <TableCell>{req.request_code}</TableCell>
                 <TableCell>{req.user?.name}</TableCell>
                 <TableCell>{renderStatus(req.status)}</TableCell>
-                <TableCell>
-                  Rp {Number(req.total_amount).toLocaleString("id-ID")}
-                </TableCell>
+                <TableCell>{formatRupiah(req.total_amount)}</TableCell>
                 <TableCell>{req.notes}</TableCell>
                 <TableCell className="flex gap-2">
                   {/* Detail */}

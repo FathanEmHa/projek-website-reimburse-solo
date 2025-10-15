@@ -1,34 +1,79 @@
-import { Home, FileText, ClipboardList, Receipt } from "lucide-react";
+import { Home, FileText, ClipboardList, Receipt, LogOut, Settings, UserRoundPen } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { logoutUser } from "@/utils/auth";
+import { Button } from "@/components/ui/Button";
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+
   const menus = [
-    { name: "Home", icon: <Home size={20} />, path: "/dashboard/employee/home" },
-    { name: "Form Pengajuan", icon: <FileText size={20} />, path: "/dashboard/employee/form" },
-    { name: "Pengajuan Saya", icon: <ClipboardList size={20} />,  path:"/dashboard/employee/myRequest" },
-    { name: "Draft Saya", icon: <Receipt size={20} />, path: "/dashboard/employee/myDrafts" },
+  { icon: "bi bi-house-door-fill", path: "/dashboard/employee/home" },
+  { icon: "bi bi-file-text-fill", path: "/dashboard/employee/form" },
+  { icon: "bi bi-clipboard2-check-fill", path: "/dashboard/employee/myRequest" },
+  { icon: "bi bi-receipt-cutoff", path: "/dashboard/employee/myDrafts" },
+  { icon: "bi bi-person-circle", path: "/dashboard/employee/profile" },
+  { icon: "bi bi-gear-fill", path: "/dashboard/employee/settings" },
   ];
 
+  const handleLogout = async () => {
+    await logoutUser();
+    navigate("/login");
+  };
+
   return (
-    <div className="h-screen w-64 bg-gray-800 text-white flex flex-col">
-      <div className="px-4 py-6 text-xl font-bold border-b border-gray-700">
-        Dashboard Karyawan
+    <div
+      className="h-screen w-20 flex flex-col items-center 
+                 bg-transparent backdrop-blur-md text-gray-300 
+                 rounded-r-2xl shadow-xl overflow-y-auto relative"
+    >
+      {/* Wrapper biar bisa scroll */}
+      <div className="flex flex-col items-center gap-8 mt-6">
+        {/* Logo / Home */}
+        <div className="bg-gradient-to-br from-blue-600 to-cyan-400 p-3 rounded-4xl shadow-[0_0_15px_rgba(0,150,255,0.4)]">
+          <Home className="text-white" size={22} />
+        </div>
+
+        {/* Menu Items */}
+        <div className="flex flex-col items-center gap-4 justify-center mt-35">
+          {menus.map((menu) => {
+            const Icon = menu.icon;
+            return (
+              <NavLink
+                key={menu.path}
+                to={menu.path}
+                className={({ isActive }) =>
+                  `flex items-center justify-center w-10 h-10 !text-white
+                  !rounded-4xl transition-all duration-300
+                  ${
+                    isActive
+                      ? "bg-gradient-to-br from-blue-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(0,150,255,0.5)]"
+                      : "hover:from-blue-600 hover:to-cyan-400 hover:text-white hover:shadow-[0_0_15px_rgba(0,150,255,0.5)] text-white/70"
+                  }`
+                }
+              >
+                <i className={`${menu.icon} text-[20px]`}></i>
+              </NavLink>
+            );
+          })}
+        </div>
       </div>
-      <nav className="flex-1 p-4 space-y-2">
-        {menus.map((menu) => (
-          <NavLink
-            key={menu.path}
-            to={menu.path}
-            className={({ isActive }) =>
-              `flex items-center gap-3 w-full px-3 py-2 rounded-lg transition 
-              ${isActive ? "bg-gray-700 font-semibold" : "hover:bg-gray-700"}`
-            }
-          >
-            {menu.icon}
-            {menu.name}
-          </NavLink>
-        ))}
-      </nav>
+
+      {/* Logout button sticky di bawah */}
+      <div
+        className="sticky bottom-0 mt-auto w-full flex justify-center
+                   bg-gradient-to-t from-[#0A1E3A]/50 to-transparent 
+                   backdrop-blur-lg border-t border-white/10 p-4"
+      >
+        <Button
+          className="flex items-center justify-center w-10 h-10 rounded-xl 
+                     text-gray-400 hover:text-red-400 hover:bg-white/10 
+                     transition duration-200"
+          onClick={handleLogout}
+        >
+          <LogOut size={20} />
+        </Button>
+      </div>
     </div>
   );
 }

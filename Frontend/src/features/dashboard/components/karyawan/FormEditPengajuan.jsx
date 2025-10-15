@@ -98,6 +98,7 @@ export default function FormEditPengajuan() {
 
   const buildFormData = () => {
     const formData = new FormData();
+    formData.append("_method", "PUT"); // Karena kita menggunakan method spoofing
     formData.append("notes", notes);
 
     items.forEach((item, index) => {
@@ -117,20 +118,22 @@ export default function FormEditPengajuan() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    const formData = buildFormData();
     try {
       const token = getToken();
       const res = await fetch(`http://localhost:8000/api/reimburse/draft/${id}`, {
-        method: "PUT",
+        method: "POST",
         headers: { Authorization: `Bearer ${token}` },
-        body: buildFormData(),
+        body: formData,
       });
 
       const data = await res.json();
       if (res.ok) {
         alert("Draft berhasil diperbarui ✅");
-        navigate("/dashboard/employee/drafts");
+        navigate("/dashboard/employee/myDrafts");
       } else {
         alert(data.message || "Gagal memperbarui draft!");
+        console.log(data.errors);
       }
     } catch (err) {
       console.error(err);
@@ -286,8 +289,8 @@ export default function FormEditPengajuan() {
               </div>
             ))}
 
-            <Button variant="secondary" onClick={addItem}>
-              <Plus size={16} className="mr-2" /> Tambah Item
+            <Button variant="secondary" className="text-white" onClick={addItem}>
+              <Plus size={16} className="mr-2 text-white" /> Tambah Item
             </Button>
           </div>
 
@@ -295,6 +298,7 @@ export default function FormEditPengajuan() {
           <div className="flex justify-end gap-3 pt-5">
             <Button
               variant="success"
+              className="text-white"
               onClick={handleSubmit}
               disabled={loading}
             >

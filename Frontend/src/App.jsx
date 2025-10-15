@@ -7,7 +7,8 @@ import EmployeeDashboard from "@/features/dashboard/pages/EmployeeDashboard";
 import HomeKaryawan from "@/features/dashboard/components/karyawan/HomeKaryawan";
 import FormPengajuan from "@/features/dashboard/components/karyawan/FormPengajuan";
 import RequestSaya from "@/features/dashboard/components/karyawan/RequestSaya";
-import DetailPageKaryawan from "@/features/dashboard/components/karyawan/DetailPageKaryawan";
+import DraftDetail from "@/features/dashboard/components/karyawan/DraftDetail";
+import RequestDetail from "./features/dashboard/components/karyawan/RequestDetail";
 import DraftSaya from "./features/dashboard/components/karyawan/DraftSaya";
 import FormEditPengajuan from "./features/dashboard/components/karyawan/FormEditPengajuan";
 
@@ -41,9 +42,9 @@ export default function App() {
           <Route path="home" element={<HomeKaryawan />} />
           <Route path="form" element={<FormPengajuan />} />
           <Route path="myRequest" element={<RequestSaya />} />
-          <Route path="myRequest/:id" element={<DetailPageKaryawan />} />
+          <Route path="myRequest/:id" element={<RequestDetail />} />
           <Route path="myDrafts" element={<DraftSaya />} />
-          <Route path="myDraft/:id" element={<DetailPageKaryawan />} />
+          <Route path="myDraft/:id" element={<DraftDetail/>} />
           <Route path="form/:id" element={<FormEditPengajuan />} />
         </Route>
 

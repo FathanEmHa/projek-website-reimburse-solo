@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::create('reimburse_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('request_id');
-            $table->unsignedBigInteger('category_id');
-            $table->date('expense_date');
-            $table->string('description');
-            $table->bigInteger('amount'); 
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->date('expense_date')->nullable();
+            $table->string('description')->nullable();
+            $table->bigInteger('amount')->nullable(); 
             $table->string('currency')->default('IDR');
             $table->enum('payment_method', ['cash', 'transfer', 'e-wallet']);
             $table->string('location')->nullable();

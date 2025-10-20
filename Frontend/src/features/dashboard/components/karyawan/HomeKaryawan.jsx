@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/Table";
 import { formatRupiah } from "@/utils/format";
 import { renderStatus } from "@/components/render/RenderStatus";
+import { getToken } from "@/utils/auth";
+
 
 export default function HomePage() {
   const [stats, setStats] = useState({
@@ -24,7 +26,7 @@ export default function HomePage() {
       try {
         const res = await fetch("http://localhost:8000/api/reimburse/request", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${getToken()}`,
           },
         });
 

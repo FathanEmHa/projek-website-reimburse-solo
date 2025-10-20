@@ -39,6 +39,10 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
 });
 
 Route::middleware(['auth:api', 'role:employee'])->group(function () {
+    // lihat profile
+    Route::put('/users/profile', [UserController::class, 'updateProfile']);
+    Route::get('/users/profile', [UserController::class, 'showProfile']);
+
     // mengajukan reimburse langsung (status submitted)
     Route::post('/reimburse', [ReimburseController::class, 'storeRequest']);
 
@@ -50,7 +54,7 @@ Route::middleware(['auth:api', 'role:employee'])->group(function () {
     Route::post('/reimburse/{id}/submit', [ReimburseController::class, 'submitDraft']);
     Route::delete('/reimburse/draft/{id}', [ReimburseController::class, 'deleteDraft']);
 
-    // delet item dari draft atau request
+    // delete item dari draft atau request
     Route::delete('/reimburse/item/{id}', [ReimburseController::class, 'deleteItem']);
 
     // fitur crud request reimburse

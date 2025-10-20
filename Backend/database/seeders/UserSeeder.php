@@ -13,19 +13,91 @@ class UserSeeder extends Seeder
     {
         $users = [
             // ==== Admins ====
-            ['name' => 'M. Agung G.S', 'email' => 'agung@company.com', 'role' => 'admin', 'department' => 'IT', 'password' => 'admin123'],
+            [
+                'staff_id' => 'ADM001',
+                'full_name' => 'M. Agung Gumelar S',
+                'email' => 'agung@company.com',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin',
+                'department' => 'IT',
+                'position' => 'System Administrator',
+                'phone_number' => '081234567890',
+                'address' => 'Ciputri',
+                'profile_picture' => null,
+                'bank_name' => 'BCA',
+                'account_number'=> '1234567890',
+                'theme_preference' => 'light',
+                'languange' => 'id',
+            ],
 
             // ==== Managers ====
-            ['name' => 'Rafael D.S', 'email' => 'rafael@company.com', 'role' => 'manager', 'department' => 'HR', 'password' => 'manager123'],
-            ['name' => 'Rizki Herlangga', 'email' => 'rizki@company.com', 'role' => 'manager', 'department' => 'HR', 'password' => 'manager124'],
-
+            [
+                'staff_id' => 'MNG001',
+                'full_name' => 'Raphael Danish Saputra',
+                'email' => 'rafael@company.com',
+                'password' => Hash::make('manager123'),
+                'role' => 'manager',
+                'department' => 'IT',
+                'position' => 'IT Manager',
+                'phone_number' => '081222237898',
+                'address' => 'Cipatik',
+                'profile_picture' => null,
+                'bank_name' => 'BCA',
+                'account_number'=> '1876543210',
+                'theme_preference' => 'light',
+                'languange' => 'id',
+            ],
             // ==== Finance ====
-            ['name' => 'Fathan M.H', 'email' => 'fathan@company.com', 'role' => 'finance', 'department' => 'Finance', 'password' => 'finance123'],
+            [
+                'staff_id' => 'FNC001',
+                'full_name' => 'Fathan Mulyasa Hilman',
+                'email' => 'fathan@company.com',
+                'password' => Hash::make('finance123'),
+                'role' => 'finance',
+                'department' => 'Finance',
+                'position' => 'Finance Manager',
+                'phone_number' => '089504717033',
+                'address' => 'Cipatik',
+                'profile_picture' => null,
+                'bank_name' => 'BCA',
+                'account_number'=> '2613187450',
+                'theme_preference' => 'light',
+                'languange' => 'id',
+            ],
 
             // ==== Employees ====
-            ['name' => 'Adit Pratama', 'email' => 'adit@company.com', 'role' => 'employee', 'department' => 'Marketing', 'password' => 'user123'],
-            ['name' => 'Kiki Ramadhan', 'email' => 'kiki@company.com', 'role' => 'employee', 'department' => 'Marketing', 'password' => 'user124'],
-            ['name' => 'Rio Saputra', 'email' => 'rio@company.com', 'role' => 'employee', 'department' => 'Marketing', 'password' => 'user125'],
+            [
+                'staff_id' => 'EMP001',
+                'full_name' => 'Adit Pratama',
+                'email' => 'adit@company.com',
+                'password' => Hash::make('user123'),
+                'role' => 'employee',
+                'department' => 'IT',
+                'position' => 'Staff IT',
+                'phone_number' => '089504367223',
+                'address' => 'Cijerah',
+                'profile_picture' => null,
+                'bank_name' => 'BCA',
+                'account_number'=> '3281819732',
+                'theme_preference' => 'light',
+                'languange' => 'id',
+            ],
+            [
+                'staff_id' => 'EMP002',
+                'full_name' => 'Light Yagami',
+                'email' => 'light@company.com',
+                'password' => Hash::make('user124'),
+                'role' => 'employee',
+                'department' => 'IT',
+                'position' => 'Staff IT',
+                'phone_number' => '089504367343',
+                'address' => 'Cibodas',
+                'profile_picture' => null,
+                'bank_name' => 'BCA',
+                'account_number'=> '1281098327',
+                'theme_preference' => 'light',
+                'languange' => 'id',
+            ]
         ];
 
         foreach ($users as $u) {
@@ -34,10 +106,20 @@ class UserSeeder extends Seeder
             User::updateOrCreate(
                 ['email' => $u['email']],
                 [
-                    'name' => $u['name'],
-                    'password' => Hash::make($u['password']),
-                    'role' => $u['role'],
-                    'department_id' => $deptId,
+                    'staff_id'          => $u['staff_id'],
+                    'full_name'         => $u['full_name'],
+                    'email'             => $u['email'],
+                    'password'          => $u['password'],
+                    'role'              => $u['role'],
+                    'department_id'     => $deptId,
+                    'position'          => $u['position'],
+                    'phone_number'      => $u['phone_number'],
+                    'address'           => $u['address'],
+                    'profile_picture'   => $u['profile_picture'],
+                    'bank_name'         => $u['bank_name'],
+                    'account_number'    => $u['account_number'],
+                    'theme_preference'  => $u['theme_preference'],
+                    'languange'         => $u['languange'],
                 ]
             );
         }

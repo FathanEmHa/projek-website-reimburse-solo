@@ -109,7 +109,7 @@ export default function RequestSaya() {
             currentData.map((req) => (
               <TableRow key={req.id}>
                 <TableCell>{req.request_code}</TableCell>
-                <TableCell>{req.user?.name}</TableCell>
+                <TableCell>{req.user?.full_name}</TableCell>
                 <TableCell>{renderStatus(req.status)}</TableCell>
                 <TableCell>{formatRupiah(req.total_amount)}</TableCell>
                 <TableCell>{req.notes}</TableCell>

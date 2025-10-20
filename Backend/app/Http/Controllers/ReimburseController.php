@@ -226,11 +226,11 @@ class ReimburseController extends Controller
     {
         $request->validate([
             'items' => 'required|array|min:1',
-            'items.*.category_id' => 'required|exists:categories,id',
-            'items.*.expense_date' => 'required|date',
-            'items.*.description' => 'required|string|max:255',
-            'items.*.amount' => 'required|numeric|min:0',
-            'items.*.payment_method' => 'required|in:cash,transfer,e-wallet',
+            'items.*.category_id' => 'nullable|exists:categories,id',
+            'items.*.expense_date' => 'nullable|date',
+            'items.*.description' => 'nullable|string|max:255',
+            'items.*.amount' => 'nullable|numeric|min:0',
+            'items.*.payment_method' => 'required|in:transfer',
             'items.*.location' => 'nullable|string|max:255',
             'items.*.receipt_path' => 'nullable|string',
         ]);

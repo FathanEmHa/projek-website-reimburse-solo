@@ -40,7 +40,7 @@ export default function Navbar() {
                     hover:text-white hover:shadow-[0_0_15px_rgba(0,150,255,0.5)]
                     transition-all duration-300"
         >
-          <i class="bi bi-bell-fill"></i>
+          <i className="bi bi-bell-fill"></i>
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
         </Button>
 

@@ -24,6 +24,8 @@ import DaftarPengajuanFinance from "@/features/dashboard/components/finance/Daft
 import AdminDashboard from "@/features/dashboard/pages/AdminDashboard";
 import DetailPageFinance from "./features/dashboard/components/finance/DetailPageFinance";
 
+import ProfilePage from "./features/profile/ProfilePage";
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -46,6 +48,7 @@ export default function App() {
           <Route path="myDrafts" element={<DraftSaya />} />
           <Route path="myDraft/:id" element={<DraftDetail/>} />
           <Route path="form/:id" element={<FormEditPengajuan />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
 
         <Route 

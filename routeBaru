@@ -1,0 +1,156 @@
+Nahh, ini keren banget Fathan — route lo udah **rapi banget untuk satu platform (gabung semua role)**.
+Sekarang kalau lo mau **pisahin antara “web super admin” dan “mobile (employee/manager/finance)”**, caranya gampang banget: tinggal **refactor struktur route-nya** jadi lebih modular dan scalable.
+
+Gw bantuin lo ngebayangin ya 👇
+
+---
+
+## 🎯 Tujuan
+
+Sekarang lo mau:
+
+* Web (super admin) → ngakses via **panel admin**
+* Mobile (employee, manager, finance) → ngakses via **aplikasi mobile**
+* Semuanya tetap pakai **backend Laravel yang sama**
+
+---
+
+## 🧱 Struktur baru (folder & file)
+
+Biar gampang dikelola, lo bisa bikin kayak gini:
+
+```
+routes/
+ ├── api.php          // buat load semua route group
+ ├── admin.php        // khusus super admin (web)
+ └── mobile.php       // khusus employee, manager, finance
+```
+
+---
+
+## ✳️ 1. `routes/api.php`
+
+File utama yang bakal load file lain:
+
+```php
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('v1')->group(function () {
+    require __DIR__.'/admin.php';
+    require __DIR__.'/mobile.php';
+});
+```
+
+Jadi nanti semua route lo otomatis jadi `/api/v1/...`
+
+---
+
+## 🧩 2. `routes/admin.php` (khusus web super admin)
+
+```php
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ReportController;
+
+// AUTH SUPER ADMIN (pakai Sanctum / JWT)
+Route::prefix('admin')->middleware(['auth:api', 'role:super_admin'])->group(function () {
+    // User management
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
+    // Global reports
+    Route::get('/reports/reimburse', [ReportController::class, 'reimburseSummary']);
+});
+```
+
+Jadi endpoint-nya bakal kayak:
+
+```
+/api/v1/admin/users
+/api/v1/admin/reports/reimburse
+```
+
+---
+
+## 📱 3. `routes/mobile.php` (khusus mobile user)
+
+```php
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ReimburseController;
+use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\PaymentController;
+
+// AUTH (umum)
+Route::post('/mobile/login', [AuthController::class, 'login']);
+
+// 🔒 Route dengan proteksi token
+Route::middleware('auth:api')->prefix('mobile')->group(function () {
+
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    // EMPLOYEE
+    Route::middleware('role:employee')->group(function () {
+        Route::get('/reimburse/drafts', [ReimburseController::class, 'myDrafts']);
+        Route::post('/reimburse/draft', [ReimburseController::class, 'saveDraft']);
+        Route::post('/reimburse', [ReimburseController::class, 'storeRequest']);
+        Route::get('/reimburse/request', [ReimburseController::class, 'myRequests']);
+    });
+
+    // MANAGER
+    Route::middleware('role:manager')->group(function () {
+        Route::get('/reimburse/requests', [ApprovalController::class, 'submittedRequests']);
+        Route::post('/reimburse/requests/{id}/approve-all', [ApprovalController::class, 'approveAllItems']);
+    });
+
+    // FINANCE
+    Route::middleware('role:finance')->group(function () {
+        Route::get('/reimburse/pending', [PaymentController::class, 'pendingRequests']);
+        Route::post('/reimburse/{id}/payall', [PaymentController::class, 'payAll']);
+    });
+});
+```
+
+Jadi endpoint-nya bakal kayak:
+
+```
+/api/v1/mobile/login
+/api/v1/mobile/reimburse/drafts
+/api/v1/mobile/reimburse/requests
+/api/v1/mobile/reimburse/{id}/payall
+```
+
+---
+
+## 🧩 Hasil Akhir
+
+Jadi struktur endpoint lo kebagi dua besar:
+
+| Platform                              | Prefix               | Contoh endpoint                    |
+| ------------------------------------- | -------------------- | ---------------------------------- |
+| **Web Super Admin**                   | `/api/v1/admin/...`  | `/api/v1/admin/users`              |
+| **Mobile (Employee/Manager/Finance)** | `/api/v1/mobile/...` | `/api/v1/mobile/reimburse/request` |
+
+Dan semuanya tetap di backend yang sama.
+Perbedaan hanya di **prefix dan role middleware**.
+
+---
+
+## ⚡ Bonus saran:
+
+* Kalau nanti lo pake **Sanctum**, pastikan token mobile dan web dipisah scope-nya (misal: `tokenable_type` = mobile/web).
+* Di `AuthController`, lo bisa tambahin parameter login misal `device_type` → biar tau login dari web atau mobile.
+
+---
+
+Kalau lo mau, gw bantuin refactor `AuthController` lo sekalian biar:
+
+* bisa login dari web super admin & mobile (dengan role check),
+* generate token berbeda,
+* return response JSON yang udah cocok buat mobile frontend (React Native/Flutter).
+
+Mau gw bantuin yang itu juga?

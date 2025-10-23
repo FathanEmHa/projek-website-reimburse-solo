@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('theme_preference', 20)->default('light');
             $table->string('languange', 10)->default('id');
 
-            $table->enum('role', ['admin', 'employee', 'manager', 'finance']);
+            $table->enum('role', ['super_admin', 'employee', 'manager', 'finance']);
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();

@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
                 'full_name' => 'M. Agung Gumelar S',
                 'email' => 'agung@company.com',
                 'password' => Hash::make('admin123'),
-                'role' => 'admin',
+                'role' => 'super_admin',
                 'department' => 'IT',
                 'position' => 'System Administrator',
                 'phone_number' => '081234567890',

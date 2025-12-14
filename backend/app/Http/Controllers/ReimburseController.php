@@ -27,7 +27,7 @@ class ReimburseController extends Controller
 
 
         $req = ReimburseRequest::create([
-            'user_id' => Auth::id(),
+            'user_id' => auth('api')->id(),
             'request_code' => null, // Akan di-generate otomatis di model
             'date_submitted' => now(),
             'status' => 'submitted',

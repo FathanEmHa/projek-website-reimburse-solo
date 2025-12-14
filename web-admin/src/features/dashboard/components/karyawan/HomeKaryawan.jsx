@@ -24,7 +24,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/reimburse/request", {
+        const res = await fetch("http://localhost:8000/api/v1/mobile/reimburse/request", {
           headers: {
             Authorization: `Bearer ${getToken()}`,
           },
@@ -56,7 +56,7 @@ export default function HomePage() {
     <div className="bg-body-gradient dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <h1 className="text-2xl font-bold mb-8">
-        Dashboard Home
+        Ringkasan Pengajuan
       </h1>
 
       {/* Statistik */}

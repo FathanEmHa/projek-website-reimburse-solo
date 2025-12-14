@@ -9,7 +9,7 @@ export function getUser() {
 }
 
 export async function loginUser(credentials) {
-  const res = await fetch("http://localhost:8000/api/login", {
+  const res = await fetch("http://localhost:8000/api/v1/mobile/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(credentials),

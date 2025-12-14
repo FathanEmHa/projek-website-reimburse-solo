@@ -145,7 +145,7 @@ export default function FormPengajuan({ mode = "create" }) {
         ? isEdit
           ? `http://localhost:8000/api/reimburse/draft/${id}`
           : `http://localhost:8000/api/reimburse/draft`
-        : `http://localhost:8000/api/reimburse`;
+        : `http://localhost:8000/api/v1/mobile/reimburse`;
 
     const method = type === "draft" && isEdit ? "PUT" : "POST";
     const formData = buildFormData();

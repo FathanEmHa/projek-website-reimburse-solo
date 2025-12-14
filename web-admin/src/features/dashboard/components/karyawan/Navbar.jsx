@@ -11,7 +11,7 @@ export default function Navbar() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch ("http://localhost:8000/api/users/profile", {
+        const res = await fetch ("http://localhost:8000/api/v1/mobile/users/profile", {
           headers: {
             Authorization: `Bearer ${getToken()}`,
           },

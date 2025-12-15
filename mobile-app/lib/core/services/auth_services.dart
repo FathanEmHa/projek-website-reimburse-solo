@@ -1,30 +1,20 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import 'package:mobile_app/app/config/app_config.dart';
-import 'package:mobile_app/core/error/api_exception.dart';
+import 'package:mobile_app/core/network/api_client.dart';
+import 'package:mobile_app/core/network/endpoints.dart';
 
 class AuthServices {
-  final http.Client client;
-  AuthServices({required this.client});
+  final ApiClient _apiClient;
+
+  AuthServices({required ApiClient apiClient}) : _apiClient = apiClient;
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final uri = Uri.parse("${AppConfig.baseUrl}/login");
-
-    final res = await client.post(
-      uri,
-      body: {
+    final response = await _apiClient.post(
+      ApiEndpoints.login,
+      data: {
         "email": email,
         "password": password,
       },
     );
 
-    final body = jsonDecode(res.body);
-    if (res.statusCode == 200) {
-      return body;
-    } else {
-      final message = body['message'] ?? 'Login Failed';
-      throw ApiException(message: message, statusCode: res.statusCode);
-    }
+    return response.data as Map<String, dynamic>;
   }
 }
